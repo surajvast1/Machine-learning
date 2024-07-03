@@ -1,0 +1,230 @@
+Ensembling is a powerful technique used in machine learning to improve the performance and robustness of models. It involves combining the predictions of multiple models to produce a single prediction.
+
+
+Voting is an ensembling technique in machine learning where multiple models (often called "base models" or "base learners") are trained on the same dataset, and their predictions are combined to produce a final output.
+
+1. Hard Voting
+In hard voting, each base model makes a prediction, and the final prediction is the one that gets the majority of the votes
+
+
+clf1 = LogisticRegression(max_iter=1000, random_state=42)
+clf2 = DecisionTreeClassifier(random_state=42)
+clf3 = SVC(probability=True, random_state=42)
+
+# Create a voting classifier with hard voting
+hard_voting_clf = VotingClassifier(
+    estimators=[('lr', clf1), ('dt', clf2), ('svc', clf3)], voting='hard'
+)
+
+# Train the voting classifier
+hard_voting_clf.fit(X_train, y_train)
+
+
+
+Soft Voting
+
+In soft voting, each base model predicts the probability of each class, and the final prediction is made based on the average of these probabilities.
+
+    soft_voting_clf = VotingClassifier(
+    estimators=[('lr', clf1), ('dt', clf2), ('svc', clf3)], voting='soft'
+)
+
+# Train the voting classifier
+soft_voting_clf.fit(X_train, y_train)
+
+# Make predictions and evaluate performance
+y_pred = soft_voting_clf.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)   
+
+
+bagging 
+
+Bagging involves training multiple models (often of the same type) on different subsets of the training data and then combining their predictions.
+with replacement 
+
+ Each subset of the training data is created by randomly selecting samples with replacement (meaning the same sample can be chosen more than once).
+ The final prediction is made by combining the predictions of all models 
+
+
+from sklearn.ensemble import BaggingClassifier
+
+bagging_clf = BaggingClassifier(
+    DecisionTreeClassifier(),
+    n_estimators=500,
+    max_samples = 100, # Select 100 random samples
+
+    bootstrap=True,  # Sampling with replacement (bagging)
+    njobs = -1
+    random_state=42
+)
+
+# Train the classifier
+bagging_clf.fit(X_train, y_train)
+
+
+ Pasting
+
+ Pasting is similar to bagging, but the key difference is that it uses sampling without replacement to create subsets of the training data
+ The final prediction is made by combining the predictions of all models 
+
+ bagging_clf = BaggingClassifier(
+    DecisionTreeClassifier(),
+    n_estimators=500,
+    max_samples = 100, # Select 100 samples
+
+    bootstrap=False,  # Sampling without replacement (pasting)
+
+    njobs = -1
+    random_state=42
+)
+
+
+out of bag classifier 
+
+bagging_clf = BaggingClassifier(
+    base_estimator=DecisionTreeClassifier(),
+    n_estimators=500,
+    max_samples=100,  # Number of samples to draw for each base estimator
+    bootstrap=True,  # Sampling with replacement (bagging)
+    oob_score=True,  # Enable OOB evaluation
+    n_jobs=-1,  # Use all available cores
+    random_state=42
+)
+
+# Train the classifier
+bagging_clf.fit(X_train, y_train)
+
+# Retrieve and print the OOB score
+oob_score = bagging_clf.oob_score_
+
+print(f'OOB Score: {oob_score:.2f}')
+
+
+Random Forest
+Random Forest is an ensemble learning method that combines multiple decision trees to improve the model's performance and robustness. It uses both bagging and random feature selection to create a "forest" of diverse trees.
+
+2 ways to implement randomforest
+
+Method 1: Using RandomForestClassifier
+
+from sklearn.ensemble import RandomForestClassifier
+
+rnd_clf = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
+
+rnd_clf.fit(X_train, y_train)
+
+y_pred_rf = rnd_clf.predict(X_test)
+
+
+method 2 Using BaggingClassifier with DecisionTreeClassifier
+
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+# Initialize the BaggingClassifier with a DecisionTreeClassifier
+bag_clf = BaggingClassifier(
+    DecisionTreeClassifier(splitter="random", max_leaf_nodes=16),
+    n_estimators=500, max_samples=1.0, bootstrap=True, n_jobs=-1)
+
+
+
+boosting
+
+Boosting is an ensemble learning technique that combines multiple weak learners (usually simple models like decision trees) sequentially to create a strong learner
+
+AdaBoost 
+
+ (Adaptive Boosting)
+ Gradient Boosting
+
+
+Decision Stumps are like trees in a Random
+Forest, but not "fully grown." They have one
+node and two leaves
+
+  Start by assigning equal weights to all training instances.
+        Initialize weights: w_i = 1 / N, for i = 1, 2, ..., N 
+    2.Train Base Classifier:
+        Train a base classifier (e.g., decision stump) on the training data using the current instance weights.
+    Compute Total Error:
+        Calculate the total error of the classifier by summing up the weights of incorrectly classified instances.
+        Total Error (TE) = sum(w)//wrongly classified weights
+    Calculate Performance of Stump:
+        Determine the performance of the stump based on the total error.
+        Stump Performance = 0.5 * ln((1 - TE) / TE)
+    Update Instance Weights:
+        Increase weights of incorrectly classified instances.
+        Decrease weights of correctly classified instances. 
+        Update weights: w = w * e^(perf * Stump Performance), where perf = 1 if misclassified, else perf = -1
+    6.Normalize Weights:
+        Normalize the updated weights to ensure they sum up to 1.
+        Normalize weights: w = w / sum(w)
+    Iterate:
+    Repeat steps 2-6 for a specified number of iterations or until a desired level of accuracy is achieved.
+    Return:
+
+    Return the final weighted combination of stumps as the AdaBoost ensemble classifier.
+
+
+
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+
+    adaboost_clf = AdaBoostClassifier(
+    base_estimator=DecisionTreeClassifier(max_depth=1),  # Decision tree stump
+    n_estimators=50,  # Number of boosting rounds
+    learning_rate=1.0,  # Learning rate (default)
+    random_state=42
+)
+
+# Train the classifier
+adaboost_clf.fit(X_train, y_train)
+
+
+
+pca
+Principal Component Analysis (PCA) is a popular technique for dimensionality reduction. Here, we'll discuss two methods for implementing PCA using the Scikit-Learn library:
+
+Direct SVD Implementation
+Scikit-Learn PCA Function
+method 1 :
+
+import numpy as np
+from sklearn.decomposition import PCA
+
+# Sample data matrix X
+X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+# Step 1: Center the data
+X_centered = X - X.mean(axis=0)
+
+# Step 2: Perform SVD
+U, s, Vt = np.linalg.svd(X_centered)
+
+# Step 3: Project the data onto the first 2 principal components
+W2 = Vt.T[:, :2]
+X2D = X_centered.dot(W2)
+
+print("Principal Components (Direct SVD):")
+print(W2)
+print("Projected Data (Direct SVD):")
+print(X2D)
+
+
+method 2 :
+
+pca = PCA(n_components=2)
+# pca = PCA(n_components=0.95) high variance 
+
+
+# Step 2: Fit PCA
+pca.fit(X)
+
+# Step 3: Transform Data
+X2D = pca.transform(X)
+
+print("Principal Components (Scikit-Learn PCA):")
+print(pca.components_.T)
+print("Projected Data (Scikit-Learn PCA):")
+print(X2D)
